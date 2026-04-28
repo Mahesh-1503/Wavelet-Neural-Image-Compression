@@ -1,0 +1,59 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\title{\textbf{Project Documentation: Medical Image Compression using Dual-Channel Processing with Wavelet Transform and SIREN}}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\setstretch{1.15}
+
+\section*{1. Introduction: What is the Project?}
+This project is an advanced image compression system purpose-built for high-fidelity medical imaging (such as DICOM files, MRIs, and X-Rays) while maintaining full support for standard high-resolution color imagery (PNG, JPG). At its core, it is a hybrid software architecture that combines classical mathematical signal processing—specifically the Discrete Wavelet Transform (DWT)—with cutting-edge Deep Learning techniques using Sinusoidal Representation Networks (SIREN). Rather than saving raw pixels, the system trains a miniature neural network to ``memorize'' the image, achieving significant storage reductions without compromising critical diagnostic quality.
+
+\section*{2. The Problem Statement: Why is this Necessary?}
+Modern healthcare facilities and hospitals generate petabytes of high-resolution digital imaging data annually. The storage, archiving, and transmission of these massive raw files (like DICOM) impose substantial financial costs and bandwidth bottlenecks. Furthermore, traditional lossy compression algorithms (like JPEG) are inherently ill-suited for medical data. They process images in localized pixel blocks, which often introduces ``artifacts''—such as blockiness or blurring. In a medical context, an artifact can obscure a microcalcification or mimic a tissue abnormality, leading to severe diagnostic errors. Consequently, there is an urgent demand for a specialized compression algorithm that can achieve high compression ratios while strictly preserving the high-frequency structural details essential for accurate medical diagnosis.
+
+\section*{3. Methodology: How does it Work?}
+The solution addresses the compression hurdle through a sophisticated, multi-phase pipeline that isolates frequencies and leverages neural memorization.
+
+\subsection*{Phase A: Frequency Separation via Wavelet Transform}
+Instead of directly processing raw spatial pixels, the system first applies a 2D Discrete Wavelet Transform (using the Haar wavelet). This mathematical operation decomposes the image into four distinct sub-bands: Low-Low (representing the overall global shape), Low-High (horizontal edges), High-Low (vertical edges), and High-High (diagonal details). Medical images typically consist of large smooth areas (low frequencies) punctuated by sudden, sharp anatomical details like bone edges or tumors (high frequencies). Separating these frequencies makes the data structurally easier to compress.
+
+\subsection*{Phase B: Neural Memorization using SIREN}
+The packed Wavelet coefficients are subsequently fed into an Implicit Neural Representation (INR) model called SIREN. Unlike standard Convolutional Neural Networks (CNNs) that extract features across an image, SIREN simply takes pixel coordinates \((X, Y)\) as input and outputs the exact Wavelet coefficients at that geometric location. By executing a brief training loop (100 epochs) on the image data, the network overfits to the image. Consequently, instead of saving millions of individual pixel values, the system only needs to store the tiny weights of this network. The neural network conceptually \textit{becomes} the image.
+
+\subsection*{Phase C: Residual Quantization and Lossless Compression}
+Because a lightweight neural network cannot predict complex geometries with zero error, the system calculates the ``Residuals''—the mathematical difference between the original Wavelet data and the Neural Network's prediction. These residuals, initially 32-bit floating-point high-precision numbers, are quantized down to 8-bit integers. Finally, the quantized residuals and their scaling metadata are combined and compressed using the standard \texttt{zlib} lossless compression algorithm. 
+
+\subsection*{Phase D: Efficient Image Reconstruction}
+To view the compressed image, the decoding process is executed in reverse. The receiver runs the Neural Network to generate a base approximation of the Wavelet coefficients, decompresses and adds the quantized residuals to recover the exact high-frequency details, and finally applies the Inverse Discrete Wavelet Transform to reconstruct the original pixels.
+
+\section*{4. System Capabilities: What Does this Project Actually Do?}
+The deployed software operates as a fully functional, interactive web application built on the Django framework. Specifically, it provides:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Dual-Channel Processing Pipeline:} When a user uploads a standard color image, the system automatically processes it twice in parallel—once preserving full RGB color channels, and once inherently as Grayscale.
+    \item \textbf{Format Agnosticism:} The application seamlessly handles clinical formats (\texttt{.dcm} DICOM pixel arrays) alongside standard consumer formats, utilizing \texttt{pydicom} and \texttt{scikit-image}.
+    \item \textbf{Real-Time Evaluation Metrics:} The system dynamically calculates and reports exact byte-size memory savings down to the megabyte. Furthermore, it mathematically proves visual fidelity by calculating the ``Max Reconstruction Error'' (the absolute maximum pixel difference between the reconstructed output and the original image).
+    \item \textbf{Downloadable Outputs:} End-users can securely download both the visually reconstructed PNGs and the securely packaged raw binary compressed payloads.
+\end{itemize}
+
+\section*{5. Applications and Uses: When is it applied?}
+Currently, as data generation in healthcare grows exponentially, the primary application of this system is in \textbf{Medical Archiving and Telemedicine}. Hospitals integrate such algorithms into their PACS (Picture Archiving and Communication Systems) to shrink their digital footprint today. For remote telemedicine consultations, particularly in rural or developing regions with constrained internet bandwidth, this system allows massive DICOM payloads to be transmitted rapidly in real-time. Secondary uses extend to \textbf{Consumer Image Storage} and \textbf{Satellite Imagery}, where preserving high-frequency edges is deemed strictly more important than achieving immediate byte minimization.
+
+\section*{6. Societal Impact: How is it Useful for Society?}
+The exponential growth of medical data is outpacing the expansion of IT budgets in public healthcare systems globally. This project delivers a direct societal benefit by reducing hospital IT infrastructure costs, freeing up capital that can be diverted directly to patient care. By preventing compression artifacts, it minimizes the risk of misdiagnosis—directly saving lives. Additionally, by facilitating high-quality image transmission over low-bandwidth networks, it democratizes access to expert second opinions, enabling a radiologist in an urban center to immediately diagnose a patient scanned in a remote, low-resource clinic. 
+
+\section*{7. Conclusion}
+In conclusion, the ``Medical Image Compression using Dual-Channel Processing with Wavelet Transform and SIREN'' project represents a paradigm shift in how high-stakes visual data is handled. By replacing traditional discrete pixel matrices with continuous mathematical functions and lightweight neural weights, it solves critical storage and bandwidth problems while fiercely protecting the data integrity required in modern medicine.
+
+\end{document}
